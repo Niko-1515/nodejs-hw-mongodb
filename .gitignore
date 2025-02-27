@@ -1,0 +1,12 @@
+//.gitignore
+
+/node_modules
+
+.env
+students.json
+contacts.json
+connectionString.txt
+
+.vscode
+.DS_Store
+.idea
