@@ -7,11 +7,11 @@ export const initMongoConnection = async () => {
     const user = getEnvVar('MONGODB_USER');
     const password = getEnvVar('MONGODB_PASSWORD');
     const url = getEnvVar('MONGODB_URL');
-    // const db = getEnvVar('MONGODB_DB');
+    const db = getEnvVar('MONGODB_DB');
     const options = getEnvVar('MONGODB_OPTIONS');
 
     await mongoose.connect(
-      `mongodb+srv://${user}:${password}@${url}/?${options}`,
+      `mongodb+srv://${user}:${password}@${url}/${db}?${options}`,
     );
     console.log('Mongo connection successfully established!');
   } catch (error) {
@@ -20,4 +20,4 @@ export const initMongoConnection = async () => {
   }
 };
 
-// mongodb+srv://nikodimstroy:<db_password>@cluster0.cstqs.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+
