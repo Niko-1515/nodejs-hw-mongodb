@@ -21,7 +21,7 @@ export const initMongoConnection = async () => {
     // Формуємо рядок підключення до MongoDB у форматі mongodb+srv
     // Використовуємо шаблонний рядок для з'єднання всіх частин
     // (retryWrites=true&w=majority) — це для стійкості й консистентності записів у MongoDB Atlas
-    const connectionString = `mongodb+srv://${user}:${password}@${url}/${db}?${options}`,
+    const connectionString = `mongodb+srv://${user}:${password}@${url}/${db}?${options}`;
 
      // Встановлюємо з'єднання з базою даних через mongoose.connect
      await mongoose.connect(connectionString);
@@ -33,4 +33,3 @@ export const initMongoConnection = async () => {
    }
  };
 
- 
