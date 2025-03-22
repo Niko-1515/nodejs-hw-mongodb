@@ -1,10 +1,7 @@
-// Імпорт Router з express
-// Express Router - об'єкт, який використовується для групування роутів
-import { Router } from 'express';
+// Імпорт з express
+import express, { Router } from 'express';
 
-import express from 'express';
-
-// Імпорт контролерів
+// Імпорт контроллерів
 import {
   createNewContactController,
   deleteContactController,
@@ -14,9 +11,16 @@ import {
   putContactController,
 } from '../controllers/contacts.js';
 
-// Імпорт ctrlWrapper - утиліта для огортання контролерів
-// Для обробки помилок (try...catch) і захищення від падіння сервера (unhandled promise rejection)
+// Імпорт утиліт і middleware
 import { ctrlWrapper } from '../utils/ctrlWrapper.js';
+import { validateBody } from '../middlewares/validateBody.js';
+import { isValidId } from '../middlewares/isValidId.js';
+
+// Імпорт валідаційних схем
+import {
+  createContactSchema,
+  updateContactSchema,
+} from '../validation/contacts.js';
 
 // Створення екземпляру Router
 const router = Router();
@@ -28,24 +32,41 @@ const jsonParser = express.json({
   limit: '100kb', // обмеження на розмір тіла запиту
 });
 
-// Роути для різних видів запитів
-// GET i DELETE --> не потребують jsonParser
+// ✅ Роути для різних типів запитів
 router.get('/contacts', ctrlWrapper(getAllContactsController));
-router.get('/contacts/:contactId', ctrlWrapper(getContactByIdController));
-router.delete('/contacts/:contactId', ctrlWrapper(deleteContactController));
 
-// POST, PUT i PATCH --> потребують jsonParser
-router.post('/contacts', jsonParser, ctrlWrapper(createNewContactController));
+// ✅ Важливо! ❗ Порядок middleware: isValidId → ctrlWrapper
+router.get(
+  '/contacts/:contactId',
+  isValidId,
+  ctrlWrapper(getContactByIdController),
+);
+router.delete(
+  '/contacts/:contactId',
+  isValidId,
+  ctrlWrapper(deleteContactController),
+);
+
+// ✅ Важливо! ❗ Порядок middleware: jsonParser → validateBody → ctrlWrapper
+router.post(
+  '/contacts',
+  jsonParser,
+  validateBody(createContactSchema),
+  ctrlWrapper(createNewContactController),
+);
 router.put(
   '/contacts/:contactId',
   jsonParser,
+  isValidId,
+  validateBody(createContactSchema),
   ctrlWrapper(putContactController),
 );
 router.patch(
   '/contacts/:contactId',
   jsonParser,
+  isValidId,
+  validateBody(updateContactSchema),
   ctrlWrapper(patchContactController),
 );
 
-// Експорт екземпляру Router
 export default router;

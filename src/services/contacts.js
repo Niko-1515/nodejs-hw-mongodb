@@ -1,44 +1,79 @@
-// ❗❗❗ Імпортуємо модель ContactsCollection
-// Використовуємо її для запитів до колекції "contacts" у MongoDB
 import { ContactsCollection } from '../db/models/contacts.js';
+import { calculatePaginationData } from '../utils/calculatePaginationData.js';
 
-// Асинхронна функція для отримання всіх контактів
-// Використовуємо метод find() для отримання всіх документів в колекції
-// Повертає масив контактів
-export const getAllContacts = async () => {
-  const contacts = await ContactsCollection.find();
-  return contacts;
+// ✅ Сервіс-логіка для отримання всіх контактів
+export const getAllContacts = async ({
+  page = 1, // сторінка --> використовуючи утиліту parsePaginationParams
+  perPage = 10, // кількість контактів на сторінці --> використовуючи утиліту parsePaginationParams
+  sortBy = 'name', // Поле сортування --> використовуючи утиліту parseSortParams
+  sortOrder = 1, // Порядок сортування --> використовуючи утиліту parseSortParams
+  // Альтернативний варіант --> sortOrder = SORT_ORDER.ASC
+  filter = {}, // Фільтр --> використовуючи утиліту parseFilterParams
+}) => {
+  const limit = perPage; // limit — обмежує кількість повернутих контактів
+  const skip = (page - 1) * perPage; // skip — пропускає записи попередніх сторінок
+
+  // Створюємо запит для отримання контактів (не відправка -> тільки створення)
+  const contactsQuery = ContactsCollection.find();
+
+  // Якщо існує фільтр (з ключем "contactType"), додаємо його до запиту
+  if (filter.contactType) {
+    // Фільтр за типом контакту (наприклад, "personal", "work", "home")
+    contactsQuery.where('contactType').equals(filter.contactType);
+  }
+
+  // Якщо існує фільтр (з ключем "isFavourite") і !== undefined, додаємо його до запиту
+  if (filter.isFavourite !== undefined) {
+    // Фільтр за улюбленим контактом (наприклад, true, false)
+    contactsQuery.where('isFavourite').equals(filter.isFavourite);
+  }
+
+  // Promise.all() використовується для виконання паралельних запитів
+  // В результаті отримаємо:
+  // countConttacts --> число контактів, які відповідають фільтру
+  // contacts --> масив контактів, які відповідають фільтру
+  const [contactsCount, contacts] = await Promise.all([
+    ContactsCollection.find().merge(contactsQuery).countDocuments(),
+    contactsQuery
+      .skip(skip)
+      .limit(limit)
+      .sort({ [sortBy]: sortOrder }) // Сортує за полем sortBy у порядку sortOrder (1 або -1)
+      .exec(),
+  ]);
+
+  // paginationData --> об'єкт з інформацією про пагінацію (метадані)
+  const paginationData = calculatePaginationData(contactsCount, perPage, page);
+
+  // Повертаємо об'єкт з масивом контактів та інформацією про пагінацію
+  return {
+    data: contacts,
+    ...paginationData,
+  };
 };
 
-// Асинхронна функція для отримання контакту за id
-// Використовуємо метод findById() для отримання документа за id
-// Приймає id контакту -> повертає об'єкт контакту
+// ✅ Сервіс-логіка для отримання контакту за id
 export const getContactById = async (contactId) => {
   const contact = await ContactsCollection.findById(contactId);
   return contact;
 };
 
-// Асинхронна функція для створення нового контакту
-// Використовуємо метод create() для створення нового документа в колекції
-// Приймає об'єкт контакту (з req.body) -> повертає об'єкт контакту
+// ✅ Сервіс-логіка для створення контакту
 export const createNewContact = async (payload) => {
   const newContact = await ContactsCollection.create(payload);
   return newContact;
 };
 
-// Асинхронна функція для видалення контакту за id
-// Використовуємо метод findOneAndDelete() для видалення документа за id
-// Приймає id контакту -> повертає об'єкт видаленого контакту
+// ✅ Сервіс-логіка для видалення контакту
 export const deleteContact = async (contactId) => {
   const deletedContact = await ContactsCollection.findOneAndDelete({
-    _id: contactId, // _id: contactId - фільтр для пошуку документа за id
+    _id: contactId,
   });
   return deletedContact;
 };
 
-// Асинхронна функція для оновлення контакту PATCH
+// ✅ Сервіс-логіка для оновлення контакту (частково)
 // Використовуємо метод findOneAndUpdate() для часткового оновлення документа
-// Приймає id контакту, об'єкт контакту (з req.body) і об'єкт опцій -> повертає об'єкт оновленого контакту
+// Приймає id контакту, об'єкт контакту з новими даними (з req.body) і об'єкт опцій -> повертає об'єкт оновленого контакту
 export const patchUpdateContact = async (contactId, payload, options = {}) => {
   const updatedContact = await ContactsCollection.findOneAndUpdate(
     { _id: contactId }, // _id: contactId - фільтр для пошуку документа за id
@@ -52,9 +87,9 @@ export const patchUpdateContact = async (contactId, payload, options = {}) => {
   return updatedContact;
 };
 
-// Асинхронна функція для оновлення контакту PUT
+// ✅ Сервіс-логіка для оновлення контакту (повністю)
 // Використовуємо метод findOneAndUpdate() для повного оновлення документа
-// Приймає id контакту, об'єкт контакту (з req.body) і об'єкт опцій -> повертає об'єкт оновленого контакту
+// Приймає id контакту, об'єкт контакту з новими даними (з req.body) і об'єкт опцій -> повертає об'єкт оновленого контакту
 export const putUpdateContact = async (contactId, payload, options = {}) => {
   const updatedContact = await ContactsCollection.findOneAndUpdate(
     { _id: contactId }, // _id: contactId - фільтр для пошуку документа за id

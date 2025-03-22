@@ -1,14 +1,11 @@
-// Імпорт бібліотек
-import express from 'express'; // Express - для створення сервера та обробки HTTP-запитів (GET, POST тощо)
-import pino from 'pino-http'; // Pino - для логування запитів до сервера в зрозумілому форматі з налаштуваннями
-import cors from 'cors'; // Cors - для дозволу запитів із різних доменів (Cross-Origin Resource Sharing)
-
-// Імпорт функцій
-import { getEnvVar } from './utils/getEnvVar.js'; // Функція для отримання змінних середовища
-import contactsRouter from './routers/contacts.js'; // Роутер для контактів
-import rootRouter from './routers/rootRouter.js'; // Роутер для root route
-import { errorHandler } from './middlewares/errorHandler.js'; // Middleware для обробки помилок
-import { notFoundHandler } from './middlewares/notFoundHandler.js'; // Middleware для обробки неіснуючих маршрутів
+import express from 'express';
+import pino from 'pino-http';
+import cors from 'cors';
+import { getEnvVar } from './utils/getEnvVar.js';
+import contactsRouter from './routers/contacts.js';
+import rootRouter from './routers/rootRouter.js';
+import { errorHandler } from './middlewares/errorHandler.js';
+import { notFoundHandler } from './middlewares/notFoundHandler.js';
 
 // Визначаємо порт, на якому працюватиме сервер
 // Використовуємо функцію getEnvVar для отримання значення зі змінної середовища PORT
@@ -21,8 +18,7 @@ const PORT = parseInt(getEnvVar('PORT', 3000));
 export const setupServer = () => {
   const app = express(); // Ініціалізуємо сервер Express, створюючи об'єкт додатку для обробки запитів
 
-  // ✅ Налаштовуємо "глобальні" middleware для обробки вхідних даних
-  // express.json --> ❗ перенесено в src/routers/contacts.js
+  // ❗ app.use(express.json()); --> перенесено в src/routers/contacts.js
 
   app.use(cors()); // Дозволяє крос-доменні запити (CORS) з будь-якого джерела (без обмежень за замовчуванням)
 
@@ -30,9 +26,9 @@ export const setupServer = () => {
   app.use(
     pino({
       transport: {
-        target: 'pino-pretty', // Використовуємо форматований вивід логів у консоль
+        target: 'pino-pretty',
         options: {
-          colorize: true, // Додаємо кольори до логів у консолі для кращої читабельності
+          colorize: true,
           translateTime: 'yyyy-mm-dd HH:MM:ss', // Налаштування формату часу
         },
       },
@@ -43,54 +39,14 @@ export const setupServer = () => {
   app.use(rootRouter);
   app.use(contactsRouter);
 
-  // Старі роути - видалені  і перенесені в src/routers/contacts.js
-  // app.get('/contacts', async (req, res) => {
-  //   const contacts = await getAllContacts();
+  // Middleware для обробки неіснуючих маршрутів
+  app.use('*', notFoundHandler);
 
-  //   res.status(200).json({
-  //     status: 200,
-  //     message: `Successfully found contacts in the amount of ${contacts.length} pcs!`,
-  //     data: contacts,
-  //   });
-  // });
+  // Middleware для обробки помилок
+  app.use(errorHandler);
 
-  // app.get('/contacts/:contactId', async (req, res) => {
-  //   const { contactId } = req.params;
-  //   const contact = await getContactById(contactId);
-
-  //   if (!contact) {
-  //     res.status(404).json({
-  //       message: 'Contact not found',
-  //     });
-  //     return;
-  //   }
-
-  //   res.status(200).json({
-  //     status: 200,
-  //     message: `Successfully found contact with id: ${contactId}!`,
-  //     data: contact,
-  //   });
-  // });
-
-  app.use('*', notFoundHandler); // Middleware для обробки неіснуючих маршрутів
-
-  // Старий Middleware для обробки помилок 404
-  // app.use('*', (req, res, next) => {
-  //   res.status(404).json({ message: 'Page Not found' });
-  // });
-
-  app.use(errorHandler); // Middleware для обробки помилок
-
-  // Старий Middleware для обробки помилок 500
-  // app.use((err, req, res, next) => {
-  //   res.status(500).json({
-  //     message: 'Something went wrong',
-  //     error: err.message,
-  //   });
-  // });
-
+  // Запускаємо сервер на вказаному порті
   app.listen(PORT, () => {
-    // Запускаємо сервер на вказаному порті
     console.log(`Server is running on port ${PORT}`);
   });
 };
