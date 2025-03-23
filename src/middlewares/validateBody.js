@@ -9,16 +9,15 @@ export const validateBody = (schema) => {
     try {
       await schema.validateAsync(req.body, { abortEarly: false });
       next();
-    } catch (err) {
-      const error = createHttpError(400, 'Bad Request', {
-        errors: err.details.map((error) => error.message),
-        // Повний об'єкт помилок доступний через 'err.details' --> ми в коді витягуємо тільки повідомлення (error.message)
-      });
-      next(error);
+    }  catch (error) {
+      const errors = error.details.map((detail) => detail.message);
+
+      next(new createHttpError.BadRequest(errors));
     }
   };
 };
-
 // ❗❗❗ Альтернатива: throw createHttpError(400, 'Bad Request', { errors: err.details.map((error) => error.message) });
 // 🍳 next(error) — стандартний спосіб передачі контрольованої помилки в ланцюжок middleware Express
 // 🍳 throw — синхронно кидає помилку в глобальний обробник, але результат схожий у цьому випадку
+
+
