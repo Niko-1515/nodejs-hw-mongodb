@@ -2,7 +2,7 @@
 export const getRootController = async (req, res) => {
   res.status(200).json({
     status: 200,
-    message: 'GET request for root route successfully accepted (hw4-validation)!',
+    message: 'GET request for root route successfully accepted (hw5-auth)!',
     timestamp: new Date().toISOString(),
   });
 };

@@ -14,41 +14,41 @@ import { parseSortParams } from '../utils/parseSortParams.js';
 import { parseFilterParams } from '../utils/parseFilterParams.js';
 
 // ✅ Контроллер-обробник для отримання всіх контактів
-// ✅ Витягує:
-// 🍳 параметри пагінації (page і perPage) --> використовуючи утиліту parsePaginationParams для валідації
-// 🍳 параметри сортування (sortBy і sortOrder) --> використовуючи утиліту parseSortParams для валідації
-// 🍳 параметри фільтру (filter) --> використовуючи утиліту parseFilterParams для валідації
-// ✅ Викликає сервіс-логіку getAllContacts
-// 🚀 Повертає:
-// 🍳 статус 200, повідомлення про успішне отримання контактів
-// 🍳 і contacts --> об'єкт з масивом контактів та інформацією про пагінацію (метадані)
 export const getAllContactsController = async (req, res) => {
   const { page, perPage } = parsePaginationParams(req.query);
   const { sortBy, sortOrder } = parseSortParams(req.query);
   const filter = parseFilterParams(req.query);
+  const userId = req.user._id; // Додаємо userId із req.user (посилання на id користувача), який створив контакт
 
+  // Викликаємо функцію-сервіс для отримання контактів
   const contacts = await getAllContacts({
     page,
     perPage,
     sortBy,
     sortOrder,
     filter,
+    userId, // Додаємо userId із req.user (посилання на id користувача), який створив контакт
   });
 
   res.status(200).json({
     status: 200,
-    message: `Successfully found contacts in the amount of ${contacts.data.length} pcs!`,
+    message: `Successfully found contacts! Page ${contacts.page} of ${contacts.totalPages}, shown ${contacts.data.length} pcs of ${contacts.totalItems} contacts`,
+    // userId: userId.toString(), // Додаємо userId із req.user (посилання на id користувача), який створив контакт
     data: contacts,
   });
 };
 
-// ✅ Контроллер-обробник для отримання контакту за id
 export const getContactByIdController = async (req, res, next) => {
   const { contactId } = req.params;
-  const contact = await getContactById(contactId);
+  const userId = req.user._id; // Додаємо userId із req.user (посилання на id користувача), який створив контакт
+
+  const contact = await getContactById(contactId, userId);
 
   if (!contact) {
-    throw createHttpError(404, 'Contact not found');
+    throw createHttpError(
+      404,
+      'Contact not found or you do not have permission',
+    );
   }
 
   res.status(200).json({
@@ -58,7 +58,6 @@ export const getContactByIdController = async (req, res, next) => {
   });
 };
 
-// ✅ Контроллер-обробник для створення нового контакту
 export const createNewContactController = async (req, res) => {
   // ✅ Старий варіант валідації --> до підключення валідатора Joi
   // if (!req.body.name || !req.body.phoneNumber || !req.body.contactType) {
@@ -80,7 +79,10 @@ export const createNewContactController = async (req, res) => {
   //   );
   // }
 
-  const newContact = await createNewContact(req.body);
+  const newContact = await createNewContact({
+    ...req.body,
+    userId: req.user._id, // Додаємо userId із req.user (посилання на id користувача), який створив контакт
+  });
 
   res.status(201).json({
     status: 201,
@@ -89,13 +91,18 @@ export const createNewContactController = async (req, res) => {
   });
 };
 
-// ✅ Контроллер-обробник для видалення контакту
 export const deleteContactController = async (req, res, next) => {
   const { contactId } = req.params;
-  const deletedContact = await deleteContact(contactId);
+
+  const userId = req.user._id; // Додаємо userId із req.user (посилання на id користувача), який створив контакт
+
+  const deletedContact = await deleteContact(contactId, userId);
 
   if (!deletedContact) {
-    throw createHttpError(404, 'Contact not found');
+    throw createHttpError(
+      404,
+      'Contact not found or you do not have permission',
+    );
   }
 
   // ✅ Альтернативний варіант обробки помилки
@@ -107,19 +114,20 @@ export const deleteContactController = async (req, res, next) => {
   res.status(204).send();
 };
 
-// ✅ Контроллер-обробник для оновлення контакту (PATCH)
 export const patchContactController = async (req, res, next) => {
-  const { contactId } = req.params; // Отримуємо id контакту з параметрів запиту
-  // Використовуємо сервісну функцію patchUpdateContact, передаємо id контакту і тіло запиту
-  const result = await patchUpdateContact(contactId, req.body);
+  const { contactId } = req.params;
 
-  // Перевірка на відсутність контакту
-  // Якщо контакт не знайдено (null), викликаємо помилку
+  const userId = req.user._id; // Додаємо userId із req.user (посилання на id користувача), який створив контакт
+
+  const result = await patchUpdateContact(contactId, req.body, userId);
+
   if (!result) {
-    throw createHttpError(404, 'Contact not found');
+    throw createHttpError(
+      404,
+      'Contact not found or you do not have permission',
+    );
   }
 
-  // Відправляємо відповідь з даними контакту
   res.status(200).json({
     status: 200,
     message: 'Successfully patched a contact!',
@@ -127,9 +135,10 @@ export const patchContactController = async (req, res, next) => {
   });
 };
 
-// ✅ Контроллер-обробник для оновлення контакту (PUT)
 export const putContactController = async (req, res, next) => {
   const { contactId } = req.params;
+
+  const userId = req.user._id; // Додаємо userId із req.user (посилання на id користувача), який створив контакт
 
   // ✅ Старий варіант валідації --> до підключення валідатора Joi
   // const existingContact = await getContactById(contactId);
@@ -149,20 +158,18 @@ export const putContactController = async (req, res, next) => {
   //   }
   // }
 
-  const result = await putUpdateContact(contactId, req.body, { upsert: true });
-  // Використовуємо сервісну функцію putUpdateContact, передаємо id контакту і тіло запиту
-  // { upsert: true } для створення контакту, якщо такого немає
+  const result = await putUpdateContact(contactId, req.body, userId, {
+    upsert: true,
+  });
 
   if (!result) {
-    // Якщо виникла помилка при створенні контакту (null), викликаємо помилку
-    throw createHttpError(404, 'Contact not found');
+    throw createHttpError(
+      404,
+      'Contact not found or you do not have permission',
+    );
   }
-
-  // Перевіряємо - контакт був створений чи відредагований
-  // isNew - true, якщо контакт був створений, false - якщо контакт був відредагований
   const statusCode = result.isNew ? 201 : 200;
 
-  // Відправляємо відповідь з даними контакту
   res.status(statusCode).json({
     status: statusCode,
     message: 'Successfully upserted a contact!',

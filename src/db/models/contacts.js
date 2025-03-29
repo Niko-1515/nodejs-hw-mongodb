@@ -23,10 +23,15 @@ const contactsSchema = new Schema(
       required: true,
       default: 'personal',
     },
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: 'users',
+      required: true,
+    }, // Додаємо поле userId (посилання на idкористувача) -> зберігатиме посилання на документ у колекції users (id користувача)
   },
   {
-    timestamps: true, // Автоматично додає поля createdAt та updatedAt до кожного документа
-    versionKey: false, // Вимикає поле __v для версійності документа
+    timestamps: true,
+    versionKey: false,
   },
 );
 

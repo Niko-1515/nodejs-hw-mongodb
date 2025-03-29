@@ -1,7 +1,4 @@
-// Імпорт з express
 import express, { Router } from 'express';
-
-// Імпорт контроллерів
 import {
   createNewContactController,
   deleteContactController,
@@ -11,58 +8,56 @@ import {
   putContactController,
 } from '../controllers/contacts.js';
 
-// Імпорт утиліт і middleware
 import { ctrlWrapper } from '../utils/ctrlWrapper.js';
-import { validateBody } from '../middlewares/validateBody.js';
-import { isValidId } from '../middlewares/isValidId.js';
 
-// Імпорт валідаційних схем
+import { isValidId } from '../middlewares/isValidId.js';
+import { authenticate } from '../middlewares/authenticate.js';
+import { validateBody } from '../middlewares/validateBody.js';
+
 import {
   createContactSchema,
   updateContactSchema,
 } from '../validation/contacts.js';
+import { checkUser } from '../middlewares/checkUser.js';
 
-// Створення екземпляру Router
 const router = Router();
 
-// Парсер для JSON-даних, "express.json" --> парсить тіло запитів у форматі JSON і додає результат як об'єкт до "req.body"
+// ❗ Парсер JSON для req.body --> обов'язково прописувати у всіх файлах роутерів
 const jsonParser = express.json({
   // Вказуємо, що ми очікуємо JSON-дані або JSON:API
   type: ['application/json', 'application/vnd.api+json'],
   limit: '100kb', // обмеження на розмір тіла запиту
 });
 
-// ✅ Роути для різних типів запитів
-router.get('/contacts', ctrlWrapper(getAllContactsController));
+// ✅ Підключаємо middleware 'authenticate'  -> використовується при логінізації (аутентифікації) до маршрутів '/contacts' -> додає властивість req.user в об'єкт запиту req
+router.use(authenticate);
+
+// ✅ Підключаємо middleware 'checkUser' -> наступний крок після middleware 'authenticate' -> використовується при перевірці прав користувача (авторизації) -> перевіряє наявність властивості req.user в об'єкті запиту req + перевіряє приналежність контакта (_id: req.params.contactId) користувачу (userId: req.user._id)
+router.use(checkUser);
+
+// прибираємо path "/contacts" --> оскільки створили хаб маршрутів src/routers/index.js (було '/contacts' --> стало '/')
+router.get('/', ctrlWrapper(getAllContactsController));
 
 // ✅ Важливо! ❗ Порядок middleware: isValidId → ctrlWrapper
-router.get(
-  '/contacts/:contactId',
-  isValidId,
-  ctrlWrapper(getContactByIdController),
-);
-router.delete(
-  '/contacts/:contactId',
-  isValidId,
-  ctrlWrapper(deleteContactController),
-);
+router.get('/:contactId', isValidId, ctrlWrapper(getContactByIdController));
+router.delete('/:contactId', isValidId, ctrlWrapper(deleteContactController));
 
 // ✅ Важливо! ❗ Порядок middleware: jsonParser → validateBody → ctrlWrapper
 router.post(
-  '/contacts',
+  '/',
   jsonParser,
   validateBody(createContactSchema),
   ctrlWrapper(createNewContactController),
 );
 router.put(
-  '/contacts/:contactId',
+  '/:contactId',
   jsonParser,
   isValidId,
   validateBody(createContactSchema),
   ctrlWrapper(putContactController),
 );
 router.patch(
-  '/contacts/:contactId',
+  '/:contactId',
   jsonParser,
   isValidId,
   validateBody(updateContactSchema),

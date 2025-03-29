@@ -1,28 +1,25 @@
 import express from 'express';
 import pino from 'pino-http';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import { getEnvVar } from './utils/getEnvVar.js';
-import contactsRouter from './routers/contacts.js';
-import rootRouter from './routers/rootRouter.js';
+// import contactsRouter from './routers/contacts.js';
+// import rootRouter from './routers/rootRouter.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 import { notFoundHandler } from './middlewares/notFoundHandler.js';
+import router from './routers/index.js';
 
-// Визначаємо порт, на якому працюватиме сервер
-// Використовуємо функцію getEnvVar для отримання значення зі змінної середовища PORT
-// Якщо змінна не вказана (undefined), за замовчуванням використовуємо порт 3000
-// Альтернатива для parseInt() --> Number()
 const PORT = parseInt(getEnvVar('PORT', 3000));
 
-// Експортуємо функцію setupServer, яка налаштовує та запускає сервер Express
-// Функція створює сервер, налаштовує middleware, визначає маршрути та запускає його
 export const setupServer = () => {
-  const app = express(); // Ініціалізуємо сервер Express, створюючи об'єкт додатку для обробки запитів
+  const app = express();
 
   // ❗ app.use(express.json()); --> перенесено в src/routers/contacts.js
 
-  app.use(cors()); // Дозволяє крос-доменні запити (CORS) з будь-якого джерела (без обмежень за замовчуванням)
+  app.use(cors());
 
-  // Налаштовуємо логування всіх запитів за допомогою Pino
+  app.use(cookieParser()); // парсер cookies
+
   app.use(
     pino({
       transport: {
@@ -35,17 +32,16 @@ export const setupServer = () => {
     }),
   );
 
-  // Підключамо роутер для root route та контактів
-  app.use(rootRouter);
-  app.use(contactsRouter);
+  // ❗ всі роути підключені через src/routers/index.js
+  // app.use(rootRouter);
+  // app.use(contactsRouter);
 
-  // Middleware для обробки неіснуючих маршрутів
+  app.use(router);
+
   app.use('*', notFoundHandler);
 
-  // Middleware для обробки помилок
   app.use(errorHandler);
 
-  // Запускаємо сервер на вказаному порті
   app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
   });
