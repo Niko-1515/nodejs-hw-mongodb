@@ -19,6 +19,7 @@ import {
   updateContactSchema,
 } from '../validation/contacts.js';
 import { checkUser } from '../middlewares/checkUser.js';
+import { upload } from '../middlewares/multer.js';
 
 const router = Router();
 
@@ -42,26 +43,39 @@ router.get('/', ctrlWrapper(getAllContactsController));
 router.get('/:contactId', isValidId, ctrlWrapper(getContactByIdController));
 router.delete('/:contactId', isValidId, ctrlWrapper(deleteContactController));
 
-// ✅ Важливо! ❗ Порядок middleware: jsonParser → validateBody → ctrlWrapper
+// ✅ Важливо! ❗ Порядок middleware: jsonParser → upload.single('photo') → validateBody → ctrlWrapper
 router.post(
   '/',
   jsonParser,
+  upload.single('photo'),
   validateBody(createContactSchema),
   ctrlWrapper(createNewContactController),
 );
+
+// ✅ Важливо! ❗ Порядок middleware: jsonParser → isValidId → upload.single('photo') → validateBody → ctrlWrapper
 router.put(
   '/:contactId',
   jsonParser,
   isValidId,
+  upload.single('photo'),
   validateBody(createContactSchema),
   ctrlWrapper(putContactController),
 );
+
+// ✅ Важливо! ❗ Порядок middleware: jsonParser → isValidId → upload.single('photo') → validateBody → ctrlWrapper
 router.patch(
   '/:contactId',
   jsonParser,
   isValidId,
+  upload.single('photo'),
   validateBody(updateContactSchema),
   ctrlWrapper(patchContactController),
 );
 
 export default router;
+
+// upload.single('photo') — це middleware від multer, яке:
+// Розбирає запит multipart/form-data.
+// Шукає поле photo у тілі запиту.
+// Зберігає файл на диск (за налаштуваннями storage).
+// Додає об'єкт із даними файлу в req.file для подальшого використання в контролері.

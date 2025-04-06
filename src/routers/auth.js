@@ -1,11 +1,18 @@
 // ✅ Роутери для реєстрації, логіну і виходу користувача
 import express, { Router } from 'express';
-import { loginUserSchema, registerUserSchema } from '../validation/auth.js';
+import {
+  loginUserSchema,
+  registerUserSchema,
+  requestResetEmailSchema,
+  resetPasswordSchema,
+} from '../validation/auth.js';
 import {
   loginUserController,
   logoutUserController,
   refreshUserSessionController,
   registerUserController,
+  requestResetEmailController,
+  resetPasswordController,
 } from '../controllers/auth.js';
 import { ctrlWrapper } from '../utils/ctrlWrapper.js';
 import { validateBody } from '../middlewares/validateBody.js';
@@ -44,5 +51,23 @@ router.post('/logout', ctrlWrapper(logoutUserController));
 // ✅ Роут для оновлення сесії користувача (refresh)
 // path: '/auth/refresh' --> контролер оновлення сесії (refreshUserSessionController)
 router.post('/refresh', ctrlWrapper(refreshUserSessionController));
+
+// ✅ Роут для запиту на надсилання листа на відновлення пароля
+// path: '/auth/request-reset-email' --> валідація тіла запиту (через схему requestResetEmailSchema) --> контролер запиту (requestResetEmailController)
+router.post(
+  '/send-reset-email',
+  jsonParser,
+  validateBody(requestResetEmailSchema),
+  ctrlWrapper(requestResetEmailController),
+);
+
+// ✅ Роут для створення (відновлення) нового пароля - після запиту на надсилання листа на відновлення пароля
+// path: '/reset-password' --> валідація тіла запиту (через схему resetPasswordSchema) --> контролер відновлення пароля (resetPasswordController)
+router.post(
+  '/reset-pwd',
+  jsonParser,
+  validateBody(resetPasswordSchema),
+  ctrlWrapper(resetPasswordController),
+);
 
 export default router;

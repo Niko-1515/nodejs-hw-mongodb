@@ -12,7 +12,7 @@ export const getAllContacts = async ({
   const limit = perPage; // limit — обмежує кількість повернутих контактів
   const skip = (page - 1) * perPage; // skip — пропускає записи попередніх сторінок
 
-  const contactsQuery = ContactsCollection.find({ userId: userId });
+  const contactsQuery = ContactsCollection.find({ userId });
 
   if (filter.contactType) {
     // Фільтр за типом контакту (наприклад, "personal", "work", "home")
@@ -29,7 +29,7 @@ export const getAllContacts = async ({
     contactsQuery
       .skip(skip)
       .limit(limit)
-      .sort({ [sortBy]: sortOrder }) // Сортує за полем sortBy (динамічно визначається поле за яким сортується з req.query) у порядку sortOrder (1 або -1)
+      .sort({ [sortBy]: sortOrder }) // Сортує за полем sortBy у порядку sortOrder (1 або -1)
       .exec(),
   ]);
 
