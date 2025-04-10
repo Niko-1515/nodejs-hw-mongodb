@@ -2,12 +2,15 @@
 import express, { Router } from 'express';
 import {
   loginUserSchema,
+  loginWithGoogleOAuthSchema,
   registerUserSchema,
   requestResetEmailSchema,
   resetPasswordSchema,
 } from '../validation/auth.js';
 import {
+  getGoogleOAuthUrlController,
   loginUserController,
+  loginWithGoogleController,
   logoutUserController,
   refreshUserSessionController,
   registerUserController,
@@ -53,7 +56,7 @@ router.post('/logout', ctrlWrapper(logoutUserController));
 router.post('/refresh', ctrlWrapper(refreshUserSessionController));
 
 // ✅ Роут для запиту на надсилання листа на відновлення пароля
-// path: '/auth/request-reset-email' --> валідація тіла запиту (через схему requestResetEmailSchema) --> контролер запиту (requestResetEmailController)
+// path: '/auth/request-reset-email' --> jsonParser --> валідація тіла запиту (через схему requestResetEmailSchema) --> контролер запиту (requestResetEmailController)
 router.post(
   '/send-reset-email',
   jsonParser,
@@ -62,12 +65,25 @@ router.post(
 );
 
 // ✅ Роут для створення (відновлення) нового пароля - після запиту на надсилання листа на відновлення пароля
-// path: '/reset-password' --> валідація тіла запиту (через схему resetPasswordSchema) --> контролер відновлення пароля (resetPasswordController)
+// path: '/reset-password' --> jsonParser --> валідація тіла запиту (через схему resetPasswordSchema) --> контролер відновлення пароля (resetPasswordController)
 router.post(
   '/reset-pwd',
   jsonParser,
   validateBody(resetPasswordSchema),
   ctrlWrapper(resetPasswordController),
+);
+
+// ✅ Роут для отримання URL-адреси Google OAuth
+// path: '/get-oauth-url' -> контролер (getGoogleOAuthUrlController) повертає URL (з clientId, redirectUri, scope, responseType=code)
+router.get('/get-oauth-url', ctrlWrapper(getGoogleOAuthUrlController));
+
+// ✅ POST-роут для входу через Google акаунт
+// path: '/confirm-oauth' --> jsonParser --> валідація тіла запиту (через схему loginWithGoogleOAuthSchema) --> контролер входу (loginWithGoogleController)
+router.post(
+  '/confirm-oauth',
+  jsonParser,
+  validateBody(loginWithGoogleOAuthSchema),
+  ctrlWrapper(loginWithGoogleController),
 );
 
 export default router;

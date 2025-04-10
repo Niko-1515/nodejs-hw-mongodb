@@ -1,0 +1,35 @@
+description: Unauthorized error
+content:
+  application/json:
+    schema:
+      type: object
+      required:
+        - status
+        - message
+        - data
+      properties:
+        status:
+          type: integer
+          example: 401
+        message:
+          type: string
+          example: UnauthorizedError
+        data:
+          type: object
+          required:
+            - message
+          properties:
+            message:
+              type: string
+              example: 'Access token expired'
+              enum:
+                - 'Access token expired'
+                - 'Access token is expired, invalid or not provided'
+                - 'Please provide Authorization header'
+                - 'Email or password is wrong'
+                - 'Auth header should be in format Bearer <token>'
+                - 'Session not found or invalid token'
+                - 'Access token is not provided'
+                - 'Session token is expired'
+                - 'Token is expired or invalid'
+                - 'No payload received'

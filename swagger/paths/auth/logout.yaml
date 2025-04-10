@@ -1,0 +1,81 @@
+tags:
+  - Auth
+summary: Logout a user
+operationId: logoutUser
+description: Logout a user by clearing session cookies
+responses:
+  '204':
+    description: User logged out successfully
+    headers:
+      Set-Cookie:
+        schema:
+          type: string
+          example: 'refreshToken=; HttpOnly; Expires=Thu, 01 Jan 1970 00:00:00 GMT; sessionId=; HttpOnly; Expires=Thu, 01 Jan 1970 00:00:00 GMT'
+  '400':
+    description: Bad request error
+    content:
+      application/json:
+        schema:
+          type: object
+          required:
+            - status
+            - message
+            - data
+          properties:
+            status:
+              type: integer
+              example: 400
+            message:
+              type: string
+              example: BadRequestError
+            data:
+              type: object
+              required:
+                - message
+              properties:
+                message:
+                  type: string
+                  example: 'Invalid session ID'
+        examples:
+          badRequest:
+            summary: Invalid session ID
+            value:
+              status: 400
+              message: BadRequestError
+              data:
+                message: 'Invalid session ID'
+  '401':
+    description: Unauthorized error
+    content:
+      application/json:
+        schema:
+          type: object
+          required:
+            - status
+            - message
+            - data
+          properties:
+            status:
+              type: integer
+              example: 401
+            message:
+              type: string
+              example: UnauthorizedError
+            data:
+              type: object
+              required:
+                - message
+              properties:
+                message:
+                  type: string
+                  example: 'Session not found or invalid token'
+        examples:
+          unauthorized:
+            summary: Invalid session
+            value:
+              status: 401
+              message: UnauthorizedError
+              data:
+                message: 'Session not found or invalid token'
+  '500':
+    $ref: '../../components/responses/500.yaml'

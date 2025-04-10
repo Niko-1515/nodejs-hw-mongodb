@@ -1,0 +1,32 @@
+tags:
+  - Auth
+summary: Get Google OAuth URL
+operationId: getGoogleOAuthUrl
+description: Get the URL for Google OAuth login
+security: []
+responses:
+  '200':
+    description: Google OAuth URL retrieved successfully
+    content:
+      application/json:
+        schema:
+          type: object
+          required:
+            - status
+            - message
+            - data
+          properties:
+            status:
+              type: integer
+              example: 200
+            message:
+              type: string
+              example: 'Successfully get Google OAuth url!'
+            data:
+              type: object
+              properties:
+                url:
+                  type: string
+                  example: 'https://accounts.google.com/o/oauth2/v2/auth?scope=https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile&response_type=code&client_id=37876986700-t4bi80pdd7ar6d20nsv2k7losjht81n8.apps.googleusercontent.com&redirect_uri=http://localhost:3000/confirm-google-auth'
+  '500':
+    $ref: ../../components/responses/500.yaml

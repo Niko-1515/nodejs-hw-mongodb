@@ -1,0 +1,108 @@
+tags:
+  - Auth
+summary: Request password reset email
+operationId: requestResetEmail
+description: Send a password reset email to the user
+security: []
+requestBody:
+  required: true
+  content:
+    application/json:
+      schema:
+        type: object
+        required:
+          - email
+        properties:
+          email:
+            type: string
+            example: 'user@example.com'
+responses:
+  '200':
+    description: Password reset email sent successfully
+    content:
+      application/json:
+        schema:
+          type: object
+          required:
+            - status
+            - message
+            - data
+          properties:
+            status:
+              type: integer
+              example: 200
+            message:
+              type: string
+              example: 'Reset password email has been successfully sent!'
+            data:
+              type: object
+              example: {}
+              description: Empty object as no additional data is returned
+  '400':
+    description: Bad request error
+    content:
+      application/json:
+        schema:
+          type: object
+          required:
+            - status
+            - message
+            - data
+          properties:
+            status:
+              type: integer
+              example: 400
+            message:
+              type: string
+              example: BadRequestError
+            data:
+              type: object
+              required:
+                - message
+              properties:
+                message:
+                  type: string
+                  example: 'Invalid request data: email is required and must be a valid email address'
+        examples:
+          badRequest:
+            summary: Invalid request data
+            value:
+              status: 400
+              message: BadRequestError
+              data:
+                message: 'Invalid request data: email is required and must be a valid email address'
+  '404':
+    description: Not found error
+    content:
+      application/json:
+        schema:
+          type: object
+          required:
+            - status
+            - message
+            - data
+          properties:
+            status:
+              type: integer
+              example: 404
+            message:
+              type: string
+              example: NotFoundError
+            data:
+              type: object
+              required:
+                - message
+              properties:
+                message:
+                  type: string
+                  example: 'User not found'
+        examples:
+          notFound:
+            summary: User not found
+            value:
+              status: 404
+              message: NotFoundError
+              data:
+                message: 'User not found'
+  '500':
+    $ref: ../../components/responses/500.yaml

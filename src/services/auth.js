@@ -15,6 +15,10 @@ import { UsersCollection } from '../db/models/user.js';
 import { SessionsCollection } from '../db/models/session.js';
 
 import { FIFTEEN_MINUTES, THIRTY_DAYS } from '../constants/index.js';
+import {
+  getFullNameFromGoogleTokenPayload,
+  validateCode,
+} from '../utils/googleOAuth2.js';
 
 // ✅ Асинхронна функція-сервіс:
 // перевірка чи є користувач з такою емейл-адресою в базі --> якщо є --> викидає помилку
@@ -275,4 +279,43 @@ export const resetPassword = async (payload) => {
     { _id: user._id },
     { password: newHashedPassword },
   );
+};
+
+// ✅ Асинхронна функція-сервіс для входу абореєстрації користувача через Google OAuth
+export const loginOrSignupWithGoogle = async (code) => {
+  // викликаємо функцію validateCode (передаємо code) -> отримуємо об'єкт ticket (з файлу utils/googleOAuth2.js)
+  const loginTicket = await validateCode(code);
+
+  // витягуємо payload із ticket (дані користувача: email, name тощо)
+  const payload = loginTicket.getPayload();
+  if (!payload) {
+    throw createHttpError(401, 'No payload received');
+  }
+
+  // перевіряємо чи є користувач з такою емейл-адресою в базі (UsersCollection)
+  let user = await UsersCollection.findOne({ email: payload.email });
+
+  // якщо користувача немає (user === null) -> створюємо нового користувача з email, name і випадковим паролем
+  if (!user) {
+    const password = await bcrypt.hash(randomBytes(10).toString('hex'), 10);
+    user = await UsersCollection.create({
+      email: payload.email,
+      name: getFullNameFromGoogleTokenPayload(payload), // функція з utils/googleOAuth2.js -> отримує ім'я користувача з об'єкта payload
+      password: password,
+    });
+  }
+
+  // Видаляє стару сесію користувача (якщо є користувач є в базі)
+  if (user) {
+    await SessionsCollection.deleteOne({ userId: user._id });
+  }
+
+  // створюємо нову сесію для користувача (accessToken, refreshToken, accessTokenValidUntil, refreshTokenValidUntil)
+  const newSession = createNewSession();
+
+  // Зберігаємо сесію в SessionsCollection і повертаємо її
+  return await SessionsCollection.create({
+    userId: user._id,
+    ...newSession,
+  });
 };

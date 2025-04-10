@@ -2,13 +2,13 @@ import express from 'express';
 import pino from 'pino-http';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
+
 import { getEnvVar } from './utils/getEnvVar.js';
-// import contactsRouter from './routers/contacts.js';
-// import rootRouter from './routers/rootRouter.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 import { notFoundHandler } from './middlewares/notFoundHandler.js';
 import router from './routers/index.js';
 import { UPLOAD_DIR } from './constants/index.js';
+import { swaggerDocs } from './middlewares/swaggerDocs.js';
 
 const PORT = parseInt(getEnvVar('PORT', 3000));
 
@@ -29,6 +29,8 @@ export const setupServer = () => {
   // Якщо клієнт робить запит на будь-який URL, що починається з /uploads (наприклад, GET /uploads/123_photo.jpg), Express шукає файл 123_photo.jpg у папці UPLOAD_DIR і відправляє його клієнту (браузеру)
   // тобто файл можна отримати через http://yourdomain/uploads/123_photo.jpg
   app.use('/uploads', express.static(UPLOAD_DIR));
+
+  app.use('/api-docs', swaggerDocs());
 
   app.use(
     pino({

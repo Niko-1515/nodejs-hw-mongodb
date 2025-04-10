@@ -39,3 +39,6 @@ export const CLOUDINARY = {
   API_KEY: 'CLOUDINARY_API_KEY',
   API_SECRET: 'CLOUDINARY_API_SECRET',
 };
+
+// ✅ Константа для визначення шляху до файлу swagger.json -> документації API (docs/swagger.json)
+export const SWAGGER_PATH = path.join(process.cwd(), 'docs', 'swagger.json');

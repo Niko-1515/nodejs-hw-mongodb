@@ -20,6 +20,8 @@ import { saveFileToCloudinary } from '../utils/saveFileToCloudinary.js';
 export const getAllContactsController = async (req, res) => {
   const { page, perPage } = parsePaginationParams(req.query);
   const { sortBy, sortOrder } = parseSortParams(req.query);
+  console.log('sortOrder from query:', sortOrder, 'typeof:', typeof sortOrder);
+  console.log('req.query:', req.query);
   const filter = parseFilterParams(req.query);
   const userId = req.user._id; // Додаємо userId із req.user (посилання на id користувача), який створив контакт
 

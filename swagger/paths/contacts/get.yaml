@@ -1,0 +1,178 @@
+tags:
+  - Contacts
+summary: Get all contacts
+operationId: getAllContacts
+description: Get a page-by-page paginated list of contacts with filtering and sorting options
+security:
+  - bearerAuth: []
+parameters:
+  - in: query
+    name: page
+    schema:
+      type: integer
+      default: 1
+    description: Page number for pagination
+    example: 1
+  - in: query
+    name: perPage
+    schema:
+      type: integer
+      default: 10
+    description: Number of contacts per page
+    example: 10
+  - in: query
+    name: sortBy
+    schema:
+      type: string
+      enum:
+        [
+          name,
+          phoneNumber,
+          email,
+          isFavourite,
+          contactType,
+          createdAt,
+          updatedAt,
+        ]
+      default: name
+    description: Field to sort by
+  - in: query
+    name: sortOrder
+    schema:
+      type: string
+      enum: [asc, desc]
+      default: asc
+    description: Sort order ("asc" for ascending, "desc" for descending)
+  - in: query
+    name: contactType
+    schema:
+      type: string
+      enum: [work, home, personal]
+    required: false
+    description: Filter by contact type (optional)
+  - in: query
+    name: isFavourite
+    schema:
+      type: boolean
+      enum: [true, false]
+    required: false
+    description: Filter by favourite status (optional)
+responses:
+  '200':
+    description: Successfully received contacts
+    content:
+      application/json:
+        schema:
+          type: object
+          required:
+            - status
+            - message
+            - data
+          properties:
+            status:
+              type: integer
+              example: 200
+            message:
+              type: string
+              example: Successfully found contacts! Page 1 of 5, shown 10 pcs of 50 contacts
+            data:
+              type: object
+              required:
+                - data
+                - page
+                - perPage
+                - totalItems
+                - totalPages
+                - hasNextPage
+                - hasPreviousPage
+              properties:
+                data:
+                  type: array
+                  items:
+                    $ref: ../../components/schemas/contact.yaml
+                page:
+                  type: integer
+                  example: 1
+                perPage:
+                  type: integer
+                  example: 10
+                totalItems:
+                  type: integer
+                  example: 50
+                totalPages:
+                  type: integer
+                  example: 5
+                hasNextPage:
+                  type: boolean
+                  example: true
+                hasPreviousPage:
+                  type: boolean
+                  example: false
+  '400':
+    description: Bad request error
+    content:
+      application/json:
+        schema:
+          type: object
+          required:
+            - status
+            - message
+            - data
+          properties:
+            status:
+              type: integer
+              example: 400
+            message:
+              type: string
+              example: BadRequestError
+            data:
+              type: object
+              required:
+                - message
+              properties:
+                message:
+                  type: string
+                  example: 'Invalid request data: page and perPage must be positive integers'
+        examples:
+          badRequest:
+            summary: Invalid query parameters
+            value:
+              status: 400
+              message: BadRequestError
+              data:
+                message: 'Invalid request data: page and perPage must be positive integers'
+  '401':
+    description: Unauthorized error
+    content:
+      application/json:
+        schema:
+          type: object
+          required:
+            - status
+            - message
+            - data
+          properties:
+            status:
+              type: integer
+              example: 401
+            message:
+              type: string
+              example: UnauthorizedError
+            data:
+              type: object
+              required:
+                - message
+              properties:
+                message:
+                  type: string
+                  example: 'Access token is expired, invalid or not provided'
+        examples:
+          unauthorized:
+            summary: Access token is expired, invalid or missing
+            value:
+              status: 401
+              message: UnauthorizedError
+              data:
+                message: 'Access token is expired, invalid or not provided'
+  '500':
+    $ref: ../../components/responses/500.yaml

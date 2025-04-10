@@ -1,0 +1,56 @@
+# Схема для опису об'єкта контакту -> yaml-файл
+# Включає поля, типи даних, обов'язковість полів та приклади значень
+
+type: object
+required:
+  - _id
+  - name
+  - phoneNumber
+  - contactType
+  - userId
+  - createdAt
+  - updatedAt
+properties:
+  _id:
+    description: Contact's unique identifier (ID)
+    type: string
+    example: 67f370889b0d3d561931227c
+  name:
+    description: Name of the contact
+    type: string
+    example: 'John Doe'
+  phoneNumber:
+    description: Contact's phone number
+    type: string
+    example: '+380561563729'
+  email:
+    description: Contact's email address
+    type: string
+    example: 'John_Doe@example.com'
+  isFavourite:
+    description: Indicates if the contact is a favorite
+    type: boolean
+    example: false
+  contactType:
+    description: Type of the contact
+    type: string
+    enum: [work, home, personal]
+    example: work
+  userId:
+    description: ID of the user who owns the contact
+    type: string
+    example: 67f36fbe9b0d3d561931226b
+  photo:
+    description: Link to contact's photo
+    type: string
+    example: 'https://res.cloudinary.com/dc4psq32m/image/upload/v1744007316/lku3hclm'
+  createdAt:
+    description: Contact creation timestamp
+    type: string
+    format: date-time
+    example: '2025-04-07T06:28:24.991+00:00'
+  updatedAt:
+    description: Contact last update timestamp
+    type: string
+    format: date-time
+    example: '2025-04-07T06:28:40.443+00:00'

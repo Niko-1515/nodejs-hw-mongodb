@@ -1,0 +1,115 @@
+tags:
+  - Auth
+summary: Login or register with Google OAuth
+operationId: loginOrRegisterWithGoogle
+description: Login or register a user using Google OAuth code, sets refreshToken and sessionId cookies
+security: []
+requestBody:
+  required: true
+  content:
+    application/json:
+      schema:
+        type: object
+        required:
+          - code
+        properties:
+          code:
+            type: string
+            example: 'googleAuthCode123'
+responses:
+  '200':
+    description: 'User logged in via Google OAuth successfully'
+    content:
+      application/json:
+        schema:
+          type: object
+          required:
+            - status
+            - message
+            - data
+          properties:
+            status:
+              type: integer
+              example: 200
+            message:
+              type: string
+              example: 'Successfully logged in via Google OAuth!'
+            data:
+              type: object
+              properties:
+                accessToken:
+                  type: string
+                  example: 'googleAccessToken123'
+    headers:
+      Set-Cookie:
+        schema:
+          type: string
+          example: 'refreshToken=googleRefreshToken123; HttpOnly; Expires=Wed, 02 May 2025 00:00:00 GMT; sessionId=googleSessionId123; HttpOnly; Expires=Wed, 02 May 2025 00:00:00 GMT'
+  '400':
+    description: Bad request error
+    content:
+      application/json:
+        schema:
+          type: object
+          required:
+            - status
+            - message
+            - data
+          properties:
+            status:
+              type: integer
+              example: 400
+            message:
+              type: string
+              example: BadRequestError
+            data:
+              type: object
+              required:
+                - message
+              properties:
+                message:
+                  type: string
+                  example: 'Invalid request data: code is required'
+        examples:
+          badRequest:
+            summary: Invalid request data
+            value:
+              status: 400
+              message: BadRequestError
+              data:
+                message: 'Invalid request data: code is required'
+  '401':
+    description: Unauthorized error
+    content:
+      application/json:
+        schema:
+          type: object
+          required:
+            - status
+            - message
+            - data
+          properties:
+            status:
+              type: integer
+              example: 401
+            message:
+              type: string
+              example: UnauthorizedError
+            data:
+              type: object
+              required:
+                - message
+              properties:
+                message:
+                  type: string
+                  example: 'No payload received'
+        examples:
+          unauthorized:
+            summary: No payload received
+            value:
+              status: 401
+              message: UnauthorizedError
+              data:
+                message: 'No payload received'
+  '500':
+    $ref: '../../components/responses/500.yaml'

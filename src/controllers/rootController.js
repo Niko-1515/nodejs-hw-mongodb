@@ -2,8 +2,7 @@
 export const getRootController = async (req, res) => {
   res.status(200).json({
     status: 200,
-    message:
-      'GET request for root route successfully accepted (hw6-email-and-images)!',
+    message: 'GET request for root route successfully accepted (hw7-swagger)!',
     timestamp: new Date().toISOString(),
   });
 };
