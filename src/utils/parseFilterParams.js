@@ -1,31 +1,28 @@
 import { ContactsCollection } from '../db/models/contacts.js';
 
-// ✅ Константа --> динамічно витягує значення зі схеми -> властивості "contactType" -> enum (['personal', 'work', 'home'])
+// Отримуємо валідні значення enum для contactType
 const VALID_CONTACT_TYPES =
   ContactsCollection.schema.path('contactType').enumValues || [];
 
-// console.log('VALID_CONTACT_TYPES:', VALID_CONTACT_TYPES);
-
-// ✅ Функція для парсингу параметру "type" (для поля contactType)
-const parseContactType = (type) => {
-  const isString = typeof type === 'string';
-  if (!isString) return;
-  return VALID_CONTACT_TYPES.includes(type) ? type : undefined;
+// Парсимо contactType з параметра type або contactType
+const parseContactType = (typeValue) => {
+  if (typeof typeValue !== 'string') return undefined;
+  return VALID_CONTACT_TYPES.includes(typeValue) ? typeValue : undefined;
 };
 
-// ✅ Функція для парсингу параметру "isFavourite"
+// Парсимо булеве значення для isFavourite
 const parseBoolean = (value) => {
-  const isString = typeof value === 'string';
-  if (!isString) return;
+  if (typeof value !== 'string') return undefined;
   if (value.toLowerCase() === 'true') return true;
   if (value.toLowerCase() === 'false') return false;
+  return undefined;
 };
 
-// ✅ Функція-парсер параметрів фільтрації з запиту клієнта (req_query)
+// Головна функція парсингу фільтрів
 export const parseFilterParams = (req_query) => {
-  const { type, isFavourite } = req_query;
+  const { type, contactType, isFavourite } = req_query;
 
-  const parsedContactType = parseContactType(type);
+  const parsedContactType = parseContactType(type || contactType);
   const parsedIsFavourite = parseBoolean(isFavourite);
 
   return {

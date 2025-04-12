@@ -23,7 +23,7 @@ export const getAllContactsController = async (req, res) => {
   console.log('sortOrder from query:', sortOrder, 'typeof:', typeof sortOrder);
   console.log('req.query:', req.query);
   const filter = parseFilterParams(req.query);
-  const userId = req.user._id; // Додаємо userId із req.user (посилання на id користувача), який створив контакт
+  // const userId = req.user._id; // Додаємо userId із req.user (посилання на id користувача), який створив контакт
 
   // Викликаємо функцію-сервіс для отримання контактів
   const contacts = await getAllContacts({
@@ -32,7 +32,8 @@ export const getAllContactsController = async (req, res) => {
     sortBy,
     sortOrder,
     filter,
-    userId, // Додаємо userId із req.user (посилання на id користувача), який створив контакт
+    userId: req.user.id,
+    // userId, // Додаємо userId із req.user (посилання на id користувача), який створив контакт
   });
 
   res.status(200).json({
